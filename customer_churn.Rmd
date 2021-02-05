@@ -1,0 +1,51 @@
+data <- read.csv(file = 'C:\\Users\\aj98\\Desktop\\College\\CIND 119\\Final Project\\churn.csv')
+summary(data)
+describe(data)
+str(data)
+
+boxplot(data$CustServ.Calls, xlab="Total Customer Service Calls", main="Total Customer Service Calls Boxplot")
+plot(data$Account.Length, data$VMail.Message, data$Day.Mins, data$Day.Calls, data$Day.Charge, data$Eve.Mins, data$Eve.Calls, data$Eve.Charge, data$Night.Mins, data$Night.Calls, data$Night.Charge, data$Intl.Mins, data$Intl.Calls, data$Intl.Charge, data$CustServ.Calls)
+
+data <- data[-c(1,2,4)]
+data <- data[-c(1,2,4,5,6)]
+
+Churn <- ifelse(data$Churn.=="False.", "False", "True")
+data <- data[-c(16)]
+Churn <- as.factor(Churn)
+data = data.frame(data, Churn)
+data.matrix(data)
+
+set.seed(1)
+index <- sample(1:nrow(data), 0.7*nrow(data))
+data_train <- data[index,]
+data_test <- data[-index,]
+
+install.packages("rpart")
+library(rpart)
+
+# Installing Packages 
+install.packages("e1071") 
+install.packages("caTools") 
+install.packages("caret") 
+  
+# Loading package 
+library(e1071) 
+library(caTools) 
+library(caret) 
+
+tree.data <- rpart(Churn ~ Area.Code + VMail.Plan + VMail.Message + Day.Mins + Day.Calls + Day.Charge + Eve.Mins + Eve.Calls + Eve.Charge + Night.Mins + Night.Calls + Night.Charge + Intl.Mins + Intl.Calls + Intl.Charge + CustServ.Calls, method="class", data = data_train)
+
+printcp(model)
+plotcp(tree.data)
+summary(tree.data)
+plot(model, uniform=TRUE,
+   main="Regression Tree for Churn")
+text(tree.data, use.n=TRUE, all=TRUE, cex=.8)
+
+tree.pred <- predict(tree.data, data_test)
+table(Actual=data_test[,16], Predict=tree.pred)
+
+set.seed(1)
+model <- naiveBayes(Churn ~ ., data = data_train)
+Prediction <- predict(model, newdata = data_test) 
+cm <- table(data_test$Churn, Prediction)
